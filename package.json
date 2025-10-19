@@ -1,0 +1,24 @@
+{
+  "name": "lebush-tequeda-v15",
+  "version": "15.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "render-build": "npm install && npm run build",
+    "render-start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "mongoose": "^7.6.3",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite": "^5.4.0"
+  }
+}
