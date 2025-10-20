@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import fs from "fs";
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ if (!MONGODB_URI) {
   mongoose
     .connect(MONGODB_URI)
     .then(() => console.log("✅ Conectado a MongoDB Atlas"))
-    .catch((e) => console.error("❌ Error de conexión con MongoDB:", e));
+    .catch((e) => console.error("❌ Error de conexión con MongoDB:", e.message));
 }
 
 // ===== Modelo de Usuario =====
@@ -57,7 +58,7 @@ const Usuario = mongoose.models.Usuario || mongoose.model("Usuario", userSchema)
       console.log("🔹 Usuario admin ya existe");
     }
   } catch (err) {
-    console.error("❌ Error al crear usuario admin:", err);
+    console.error("❌ Error al crear usuario admin:", err.message);
   }
 })();
 
@@ -90,14 +91,31 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// ===== Servir el Frontend (dist) =====
-app.use(express.static(path.join(__dirname, "dist")));
-app.get("*", (req, res) =>
-  res.sendFile(path.join(__dirname, "dist", "index.html"))
-);
+// ===== Servir el Frontend (detecta si hay /dist o /src) =====
+const distPath = path.join(__dirname, "dist");
+const srcPath = path.join(__dirname, "src");
+
+if (fs.existsSync(path.join(distPath, "index.html"))) {
+  console.log("📁 Sirviendo frontend desde /dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) =>
+    res.sendFile(path.join(distPath, "index.html"))
+  );
+} else if (fs.existsSync(path.join(srcPath, "index.html"))) {
+  console.log("📁 Sirviendo frontend desde /src");
+  app.use(express.static(srcPath));
+  app.get("*", (req, res) =>
+    res.sendFile(path.join(srcPath, "index.html"))
+  );
+} else {
+  console.warn("⚠️  No se encontró ni /dist ni /src con index.html");
+  app.get("*", (req, res) =>
+    res.send("⚠️ No hay frontend disponible para servir.")
+  );
+}
 
 // ===== Arranque del servidor =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log("🚀 LEBUSH — ¡TeQueda! VFinal15 corriendo en puerto", PORT)
+  console.log(`🚀 LEBUSH — ¡TeQueda! VFinal15 corriendo en puerto ${PORT}`)
 );
