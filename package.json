@@ -1,24 +1,24 @@
 {
   "name": "lebush-tequeda-v15",
-  "version": "15.0.0",
+  "version": "1.0.0",
+  "description": "LEBUSH TeQueda V15 — Producción lista para Render",
+  "main": "server.js",
   "type": "module",
-  "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "render-build": "npm install && npm run build",
-    "render-start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'Nada que construir, frontend ya compilado.'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.18.2",
-    "mongoose": "^7.6.3",
-    "path": "^0.12.7"
+    "express": "^4.19.2",
+    "mongoose": "^8.4.0"
   },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.2",
-    "vite": "^5.4.0"
-  }
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": [],
+  "author": "Mario Roberto Tuchez",
+  "license": "MIT"
 }
