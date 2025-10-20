@@ -1,72 +1,103 @@
-import express from 'express'
-import cors from 'cors'
-import mongoose from 'mongoose'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import dotenv from 'dotenv'
-import bcrypt from 'bcryptjs'
+// ===== LEBUSH — ¡TeQueda! VFinal15 =====
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
 
-dotenv.config()
+dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-// ====== Mongo ======
-const MONGODB_URI = process.env.MONGODB_URI || ''
+// ===== Conexión a MongoDB Atlas =====
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  "mongodb+srv://admin:Lebush2025@cluster0.ndrrpj5.mongodb.net/lebush_tequeda?retryWrites=true&w=majority";
+
 if (!MONGODB_URI) {
-  console.warn('⚠️  MONGODB_URI no está definido. Configúralo en .env o en Render.')
+  console.warn("⚠️  MONGODB_URI no está definido. Configúralo en .env o en Render.");
 } else {
-  mongoose.connect(MONGODB_URI).then(()=>console.log('✅ Conectado a MongoDB Atlas')).catch(e=>console.error('❌ Mongo error:', e))
+  mongoose
+    .connect(MONGODB_URI)
+    .then(() => console.log("✅ Conectado a MongoDB Atlas"))
+    .catch((e) => console.error("❌ Error de conexión con MongoDB:", e));
 }
 
-// ====== Modelos ======
+// ===== Modelo de Usuario =====
 const userSchema = new mongoose.Schema({
   nombre: String,
   correo: { type: String, unique: true },
   password: String,
-  rol: { type: String, default: 'admin' }
-})
-const Usuario = mongoose.models.Usuario || mongoose.model('Usuario', userSchema)
+  rol: { type: String, default: "admin" },
+});
 
-// ====== Seed admin ======
-app.get('/api/_seed_admin', async (req, res) => {
+const Usuario = mongoose.models.Usuario || mongoose.model("Usuario", userSchema);
+
+// ===== Crear admin por defecto si no existe =====
+(async () => {
   try {
-    const name = process.env.ADMIN_NAME || 'Administrador'
-    const correo = process.env.ADMIN_EMAIL || 'admin@lebush.local'
-    const plain = process.env.ADMIN_PASSWORD || 'admin123'
-    let u = await Usuario.findOne({ correo })
-    if (!u) {
-      const hash = await bcrypt.hash(plain, 10)
-      u = await Usuario.create({ nombre: name, correo, password: hash, rol: 'admin' })
+    const existeAdmin = await Usuario.findOne({ correo: "mario@lebush.com" });
+    if (!existeAdmin) {
+      const hash = await bcrypt.hash("Lebush2025", 10);
+      await Usuario.create({
+        nombre: "Mario Roberto Tuchez",
+        correo: "mario@lebush.com",
+        password: hash,
+        rol: "admin",
+      });
+      console.log("✅ Usuario admin creado: mario@lebush.com / Lebush2025");
+    } else {
+      console.log("🔹 Usuario admin ya existe");
     }
-    res.json({ ok: true, correo: u.correo })
-  } catch (e) {
-    res.status(500).json({ ok: false, error: String(e) })
+  } catch (err) {
+    console.error("❌ Error al crear usuario admin:", err);
   }
-})
+})();
 
-// ====== Login ======
-app.post('/api/login', async (req, res) => {
+// ===== Login =====
+app.post("/api/login", async (req, res) => {
   try {
-    const { correo, password } = req.body
-    if (!correo || !password) return res.status(400).json({ mensaje: 'Datos incompletos' })
-    const usuario = await Usuario.findOne({ correo })
-    if (!usuario) return res.status(400).json({ mensaje: 'Usuario no encontrado' })
-    const ok = await bcrypt.compare(password, usuario.password)
-    if (!ok) return res.status(400).json({ mensaje: 'Contraseña incorrecta' })
-    res.json({ mensaje: 'Login exitoso', token: 'dummy-'+Date.now(), usuario: { nombre: usuario.nombre, rol: usuario.rol, correo: usuario.correo } })
+    const { correo, password } = req.body;
+    if (!correo || !password)
+      return res.status(400).json({ mensaje: "Datos incompletos" });
+
+    const usuario = await Usuario.findOne({ correo });
+    if (!usuario)
+      return res.status(400).json({ mensaje: "Usuario no encontrado" });
+
+    const ok = await bcrypt.compare(password, usuario.password);
+    if (!ok)
+      return res.status(400).json({ mensaje: "Contraseña incorrecta" });
+
+    res.json({
+      mensaje: "Login exitoso",
+      token: "dummy-" + Date.now(),
+      usuario: {
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+        correo: usuario.correo,
+      },
+    });
   } catch (e) {
-    res.status(500).json({ mensaje: 'Error interno del servidor' })
+    res.status(500).json({ mensaje: "Error interno del servidor" });
   }
-})
+});
 
-// ====== Frontend (dist) ======
-app.use(express.static(path.join(__dirname, 'dist')))
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')))
+// ===== Servir el Frontend (dist) =====
+app.use(express.static(path.join(__dirname, "dist")));
+app.get("*", (req, res) =>
+  res.sendFile(path.join(__dirname, "dist", "index.html"))
+);
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log('🚀 LEBUSH — ¡TeQueda! VFinal15 en puerto', PORT))
+// ===== Arranque del servidor =====
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+  console.log("🚀 LEBUSH — ¡TeQueda! VFinal15 corriendo en puerto", PORT)
+);
